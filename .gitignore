@@ -25,6 +25,7 @@ var/
 *.egg
 venv/
 .vscode
+.python-version
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -73,3 +74,4 @@ target/
 *.swp
 
 .DS_Store
+test.py
