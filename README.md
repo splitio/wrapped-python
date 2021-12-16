@@ -1,12 +1,14 @@
 # wrapped-python
 
 ## Compatibility
+
 This SDK is compatible with **Python 3 and higher**.
 
 ## Getting started
+
 Below is a simple example that describes the instantiation and most basic usage of our SDK:
 
-Run `pip install splitio_client`
+Run `pip install splitio_client>=9.1.1`
 
 ```python
 from splitio_wrapper import get_factory
@@ -30,8 +32,17 @@ except TimeoutException:
 ```
 
 If you want to bypass evaluations you can call the method `disable_evaluations()` and you can turn it back by calling `enabling_evaluations()`
+
 ```python
 split.disable_evaluations()  # After disabling, everything will return Control
 
 split.enable_evaluations()  # After enabling, all the logic will be done again to evaluate features 
+```
+
+```python
+from splitio_wrapper import get_factory
+
+factory = get_factory('YOUR_SDK_TYPE_API_KEY', config=config)
+split = factory.client()
+split.disable_evaluations() if disable_redis else split.enable_evaluations()
 ```

@@ -1,1 +1,1 @@
-splitio-client
+splitio-client >= 9.1.1
