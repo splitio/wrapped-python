@@ -9,7 +9,7 @@ Below is a simple example that describes the instantiation and most basic usage 
 Run `pip install splitio_client`
 
 ```python
-from wrapper import get_factory
+from splitio_wrapper import get_factory
 from splitio.exceptions import TimeoutException
 
 factory = get_factory('YOUR_SDK_TYPE_API_KEY', config=config)
