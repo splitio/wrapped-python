@@ -22,7 +22,9 @@ class SplitFactoryWrapped(object):
         :param client: SplitClient instance
         :type client: splitio.client.Client
         """
-        self._evaluation_bypassed = False
+        self._evaluations_enabled = kwargs.get('evaluations_enabled', True)
+        if kwargs.get('evaluations_enabled') is not None:
+            del kwargs['evaluations_enabled']
         self._factory = split_factory(api_key, **kwargs)
 
     def client(self):
@@ -93,26 +95,26 @@ class SplitFactoryWrapped(object):
         self._factory.resume()
 
     @property
-    def evaluation_bypassed(self):
+    def evaluations_enabled(self):
         """
         Return whether the evaluations are bypassed.
 
         :return: True if the evaluations are bypassed. False otherwhise.
         :rtype: bool
         """
-        return self._evaluation_bypassed
+        return self._evaluations_enabled
 
     def enable_evaluations(self):
         """
         Enables evaluations
         """
-        self._evaluation_bypassed = False
+        self._evaluations_enabled = True
 
     def disable_evaluations(self):
         """
         Disables evaluations
         """
-        self._evaluation_bypassed = True
+        self._evaluations_enabled = False
 
 
 class SplitClientWrapped(object):
@@ -133,14 +135,14 @@ class SplitClientWrapped(object):
         self._client = factory.client()
 
     @property
-    def evaluation_bypassed(self):
+    def evaluations_enabled(self):
         """
         Return whether the evaluations are bypassed.
 
         :return: True if the evaluations are bypassed. False otherwhise.
         :rtype: bool
         """
-        return self._factory.evaluation_bypassed
+        return self._factory.evaluations_enabled
 
     def enable_evaluations(self):
         """
@@ -181,9 +183,7 @@ class SplitClientWrapped(object):
         :return: The treatment for the key and feature
         :rtype: tuple(str, str)
         """
-        if self.evaluation_bypassed:
-            return self._treatment_control()
-        return self._client.get_treatment_with_config(key, feature, attributes)
+        return self._client.get_treatment_with_config(key, feature, attributes) if self.evaluations_enabled else self._treatment_control()
 
     def get_treatment(self, key, feature, attributes=None):
         """
@@ -201,9 +201,7 @@ class SplitClientWrapped(object):
         :return: The treatment for the key and feature
         :rtype: str
         """
-        if self.evaluation_bypassed:
-            return self._treatment_control()[0]
-        return self._client.get_treatment(key, feature, attributes)
+        return self._client.get_treatment(key, feature, attributes) if self.evaluations_enabled else self._treatment_control()[0]
 
     def get_treatments_with_config(self, key, features, attributes=None):
         """
@@ -221,14 +219,14 @@ class SplitClientWrapped(object):
         :return: Dictionary with the result of all the features provided
         :rtype: dict
         """
-        if self.evaluation_bypassed:
-            try:
-                return input_validator.generate_control_treatments(features, 'get_treatments_with_config')
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.error('Error calling get_treatments_with_config')
-                _LOGGER.debug('Error: ', exc_info=True)
-                return {}
-        return self._client.get_treatments_with_config(key, features, attributes)
+        if self.evaluations_enabled:
+            return self._client.get_treatments_with_config(key, features, attributes)
+        try:
+            return input_validator.generate_control_treatments(features, 'get_treatments_with_config')
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.error('Error calling get_treatments_with_config')
+            _LOGGER.debug('Error: ', exc_info=True)
+            return {}
 
     def get_treatments(self, key, features, attributes=None):
         """
@@ -246,15 +244,15 @@ class SplitClientWrapped(object):
         :return: Dictionary with the result of all the features provided
         :rtype: dict
         """
-        if self.evaluation_bypassed:
-            try:
-                with_config = input_validator.generate_control_treatments(features, 'get_treatments')
-                return {feature: result[0] for (feature, result) in with_config.items()}
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.error('Error calling get_treatments')
-                _LOGGER.debug('Error: ', exc_info=True)
-                return {}
-        return self._client.get_treatments(key, features, attributes)
+        if self.evaluations_enabled:
+            return self._client.get_treatments(key, features, attributes)
+        try:
+            with_config = input_validator.generate_control_treatments(features, 'get_treatments')
+            return {feature: result[0] for (feature, result) in with_config.items()}
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.error('Error calling get_treatments')
+            _LOGGER.debug('Error: ', exc_info=True)
+            return {}
 
     def track(self, key, traffic_type, event_type, value=None, properties=None):
         """
@@ -274,9 +272,7 @@ class SplitClientWrapped(object):
         :return: Whether the event was created or not.
         :rtype: bool
         """
-        if self.evaluation_bypassed:
-            return False
-        return self._client.track(key, traffic_type, event_type, value, properties)
+        return self._client.track(key, traffic_type, event_type, value, properties) if self.evaluations_enabled else False
 
 
 class ManagerWrapped(object):
@@ -297,14 +293,14 @@ class ManagerWrapped(object):
         self._manager = factory.manager()
 
     @property
-    def evaluation_bypassed(self):
+    def evaluations_enabled(self):
         """
         Return whether the evaluations are bypassed.
 
         :return: True if the evaluations are bypassed. False otherwhise.
         :rtype: bool
         """
-        return self._factory.evaluation_bypassed
+        return self._factory.evaluations_enabled
 
     def enable_evaluations(self):
         """
@@ -325,9 +321,7 @@ class ManagerWrapped(object):
         :return: A list of str
         :rtype: list
         """
-        if self.evaluation_bypassed:
-            return []
-        return self._manager.split_names()
+        return self._manager.split_names() if self.evaluations_enabled else []
 
     def splits(self):
         """
@@ -336,9 +330,8 @@ class ManagerWrapped(object):
         :return: A List of SplitView.
         :rtype: list()
         """
-        if self.evaluation_bypassed:
-            return []
-        return self._manager.splits()
+        return self._manager.splits() if self.evaluations_enabled else []
+
 
     def split(self, feature_name):
         """
@@ -350,6 +343,4 @@ class ManagerWrapped(object):
         :return: The SplitView instance.
         :rtype: splitio.models.splits.SplitView
         """
-        if self.evaluation_bypassed:
-            return None
-        return self._manager.split(feature_name)
+        return self._manager.split(feature_name) if self.evaluations_enabled else None

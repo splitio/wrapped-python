@@ -39,10 +39,18 @@ split.disable_evaluations()  # After disabling, everything will return Control
 split.enable_evaluations()  # After enabling, all the logic will be done again to evaluate features 
 ```
 
+Or you can pass a config when you instantiated the factory:
+
+```python
+factory = get_factory('YOUR_SDK_TYPE_API_KEY', config=config, evaluations_enabled=False)  # Everything will return Control
+
+factory = get_factory('YOUR_SDK_TYPE_API_KEY', config=config, evaluations_enabled=True)  # Will evaluate features
+```
+
 ```python
 from splitio_wrapper import get_factory
 
-factory = get_factory('YOUR_SDK_TYPE_API_KEY', config=config)
+factory = get_factory('YOUR_SDK_TYPE_API_KEY', config=config, evaluations_enabled=False)
 split = factory.client()
 split.disable_evaluations() if disable_redis else split.enable_evaluations()
 ```
