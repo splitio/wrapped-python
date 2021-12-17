@@ -54,7 +54,7 @@ class WrapperTests(object):
     def test_wrapper_config(self):
         """Instantiate a client with a YAML file and issue get_treatment() calls."""
         filename = os.path.join(os.path.dirname(__file__), 'files', 'splits.yaml')
-        factory = get_factory('localhost', config={'splitFile': filename}, evaluations_enabled=True)
+        factory = get_factory('localhost', config={'splitFile': filename, 'evaluationsEnabled': True})
         factory.block_until_ready()
 
         # Evaluations Enabled
@@ -75,7 +75,7 @@ class WrapperTests(object):
 
 
         # Evaluations Disabled
-        factory2 = get_factory('localhost', config={'splitFile': filename}, evaluations_enabled=False)
+        factory2 = get_factory('localhost', config={'splitFile': filename, 'evaluationsEnabled': False})
         factory2.block_until_ready()
         client2 = factory2.client()
 

@@ -22,9 +22,10 @@ class SplitFactoryWrapped(object):
         :param client: SplitClient instance
         :type client: splitio.client.Client
         """
-        self._evaluations_enabled = kwargs.get('evaluations_enabled', True)
-        if kwargs.get('evaluations_enabled') is not None:
-            del kwargs['evaluations_enabled']
+        config = kwargs.get('config', {})
+        self._evaluations_enabled = config.get('evaluationsEnabled', True)
+        if config.get('evaluationsEnabled') is not None:
+            del config['evaluationsEnabled']
         self._factory = split_factory(api_key, **kwargs)
 
     def client(self):
